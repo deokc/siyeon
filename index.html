@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Instagram @siyeon</title>
+    <style>
+        :root {
+            --bg: #fafafa;
+            --white: #ffffff;
+            --text: #262626;
+            --sec-text: #8e8e8e;
+            --accent: #0095f6;
+            --heart: #ed4956;
+            --border: #dbdbdb;
+            --btn-gray: #efefef;
+        }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; overflow-x: hidden; }
+        .nav { height: 50px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 10; font-weight: bold; font-size: 18px; }
+        .container { max-width: 935px; margin: 0 auto; padding: 20px 10px; }
+
+        /* Profile Area */
+        .profile { display: flex; margin-bottom: 30px; align-items: center; gap: 40px; padding: 0 10px; }
+        .p-img { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #dc2743, #cc2366); padding: 2px; flex-shrink: 0; }
+        .p-img-in { width: 100%; height: 100%; border-radius: 50%; background: #1a1a1a; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .p-img-in img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .p-info h2 { font-size: 22px; font-weight: 300; margin: 0; }
+        .p-actions { display: flex; gap: 8px; margin: 12px 0; align-items: center; }
+        
+        .btn-follow { background: var(--accent); color: white; border: none; padding: 6px 16px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        .btn-follow.following { background: var(--btn-gray); color: var(--text); }
+        .btn-msg { background: var(--btn-gray); border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+
+        .p-stats { display: flex; gap: 20px; list-style: none; padding: 0; margin-bottom: 15px; font-size: 14px; }
+        .p-stats b { font-weight: 600; }
+        .bio { font-size: 14px; line-height: 1.5; }
+
+        /* Feed Grid */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+        .post { aspect-ratio: 1/1; position: relative; cursor: pointer; overflow: hidden; background: #efefef; }
+        .post img { width: 100%; height: 100%; object-fit: cover; }
+        .post-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); color: #fff; display: none; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: bold; }
+        @media (min-width: 768px) { .grid { gap: 28px; } .post:hover .post-overlay { display: flex; } .p-img { width: 150px; height: 150px; padding: 3px; } .p-info h2 { font-size: 28px; } .nav { height: 60px; font-size: 20px; } }
+
+        /* Modal Style */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--white); width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; }
+        
+        /* Post Modal Desktop */
+        @media (min-width: 850px) {
+            .post-modal-content { width: 95%; max-width: 1050px; height: 85vh; border-radius: 4px; flex-direction: row; }
+            .m-img-area { flex: 1.2; border-right: 1px solid var(--border); border-bottom: none; }
+            .m-side { flex: 0.8; min-width: 380px; }
+        }
+
+        .m-img-area { background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .m-img-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        
+        .m-side { display: flex; flex-direction: column; background: var(--white); flex: 1; overflow: hidden; }
+        .m-header { padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 14px; }
+        .m-body { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+        
+        .m-caption { margin-bottom: 20px; font-size: 14px; line-height: 1.5; border-bottom: 1px solid #efefef; padding-bottom: 15px; }
+        .comment-item { margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
+        .comment-user { font-weight: 600; margin-right: 6px; }
+
+        .m-footer { padding: 10px 16px; border-top: 1px solid var(--border); background: var(--white); }
+        .m-interaction { display: flex; gap: 15px; font-size: 24px; padding: 8px 0; }
+        .btn-like { cursor: pointer; font-style: normal; }
+        
+        .m-input-area { display: flex; align-items: center; padding: 10px 0; border-top: 1px solid #efefef; }
+        .m-input { flex: 1; border: none; outline: none; font-size: 14px; background: transparent; }
+        .m-btn { background: none; border: none; color: var(--accent); font-weight: 600; cursor: pointer; opacity: 0.3; }
+        .m-btn.active { opacity: 1; }
+
+        /* Message Modal */
+        .msg-modal-content { width: 100%; height: 100%; flex-direction: column; }
+        @media (min-width: 500px) { .msg-modal-content { width: 400px; height: 500px; border-radius: 12px; } }
+        .msg-header { padding: 15px; border-bottom: 1px solid var(--border); text-align: center; font-weight: 600; position: relative; }
+        .msg-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #fff; }
+        .msg-bubble { max-width: 80%; padding: 8px 12px; border-radius: 15px; font-size: 14px; }
+        .msg-received { background: var(--btn-gray); align-self: flex-start; }
+        .msg-sent { background: var(--accent); color: white; align-self: flex-end; }
+        
+        .close-btn { position: absolute; top: 10px; right: 15px; color: #262626; font-size: 30px; cursor: pointer; z-index: 1001; }
+        @media (min-width: 850px) { .close-btn { color: white; top: -45px; right: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="nav">Instagram</div>
+
+<div class="container">
+    <header class="profile">
+        <div class="p-img">
+            <div class="p-img-in">
+                <img src="https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/0.png" alt="siyeon profile" onerror="this.parentNode.innerHTML='SY';">
+            </div>
+        </div>
+        <section class="p-info">
+            <div class="p-actions">
+                <h2>siyeon</h2>
+                <button id="main-follow-btn" class="btn-follow" onclick="toggleFollow()">팔로우</button>
+                <button class="btn-msg" onclick="openMsgModal()">메시지</button>
+            </div>
+            <ul class="p-stats">
+                <li>게시물 <b>6</b></li>
+                <li>팔로워 <b id="follower-count">1248</b></li>
+                <li>팔로잉 <b>157</b></li>
+            </ul>
+            <div class="bio">
+                <b>한시연</b><br>
+                Zenit Univ. Social Physical Education 🏐<br>
+                복잡한 거 싫어함. 질문은 핵심만.<br>
+                <span style="color: #00376b;">#ISTP #Gamer #GymLife</span>
+            </div>
+        </section>
+    </header>
+
+    <div class="grid" id="main-grid"></div>
+</div>
+
+<div id="postModal" class="modal">
+    <div class="modal-content post-modal-content">
+        <span class="close-btn" onclick="closeModal('postModal')">&times;</span>
+        <div id="modal-img-area" class="m-img-area"></div>
+        <div class="m-side">
+            <div class="m-header">siyeon</div>
+            <div class="m-body" id="m-body-scroll">
+                <div id="modal-caption" class="m-caption"></div>
+                <div id="comment-list"></div>
+            </div>
+            <div class="m-footer">
+                <div class="m-interaction">
+                    <span id="heart-icon" class="btn-like" onclick="toggleLike()">🤍</span>
+                    <span>💬</span>
+                    <span>✈️</span>
+                </div>
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">좋아요 <span id="modal-likes-count"></span>개</div>
+                <div class="m-input-area">
+                    <input type="text" id="comment-input" class="m-input" placeholder="댓글 달기..." oninput="checkCommentInput()">
+                    <button id="comment-submit" class="m-btn" onclick="addComment()">게시</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="msgModal" class="modal">
+    <div class="modal-content msg-modal-content">
+        <span class="close-btn" onclick="closeModal('msgModal')">&times;</span>
+        <div class="msg-header">siyeon</div>
+        <div class="msg-body" id="msg-list">
+            <div id="empty-hint" style="text-align: center; color: #8e8e8e; font-size: 13px; margin-top: 20px;">
+                상대방에게 메시지를 보내보세요.
+            </div>
+        </div>
+        <div class="msg-footer" style="padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px;">
+            <input type="text" id="msg-input" class="m-input" style="background: var(--btn-gray); padding: 8px 15px; border-radius: 20px;" placeholder="메시지 입력..." onkeypress="if(event.keyCode==13) sendMsg()">
+            <button class="m-btn active" onclick="sendMsg()">보내기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const postsData = [
+        { 
+            img: "https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/1.png", 
+            likes: 184, liked: false,
+            caption: "오늘 운동 끝. 내일 계단 못 내려갈 예정.", 
+            tags: "#오운완 #근손실방지", 
+            comments: [
+                {user: "gym_junior", text: "선배님 어깨 실화입니까? ㄷㄷ"},
+                {user: "siyeon", text: "@gym_junior 운동이나 해라"},
+                {user: "p_e_a_c_h_", text: "시연아 너 또 스쿼트 했냐? 작작해"},
+                {user: "p.use", text: "시연아 오늘 대리 출석 가능해? 제발..."},
+                {user: "bench_king", text: "오늘 유산소는 안 하셨나요?"},
+                {user: "siyeon", text: "@bench_king 유산소 하면 근손실 옴."},
+                {user: "fitness_lover", text: "자세 정보 좀 부탁드려요!"}
+            ] 
+        },
+        { 
+            img: "https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/2.png", 
+            likes: 420, liked: false,
+            caption: "친구가 하도 벚꽃 보러 가자고 해서 나옴. 꽃보다 사람이 더 많다. 기력 빨려.", 
+            tags: "#벚꽃 #봄이냐", 
+            comments: [
+                {user: "u_lucky", text: "그래도 막상 나오니까 좋았으면서 ㅋㅋ 사진 잘 나왔네!"},
+                {user: "siyeon", text: "@u_lucky 30분 만에 집 가고 싶었음. 밥이나 사."},
+                {user: "healer_god", text: "시연님 벚꽃 아래 있으니까 분위기 완전 달라요 ㄷㄷ"},
+                {user: "tanker_kim", text: "아니 시연이 꽃구경도 가냐? 내일 하체 루틴 두 배로 간다."},
+                {user: "siyeon", text: "@tanker_kim 운동은 운동이고. 내일 렉 비워놔라."},
+                {user: "pro__x", text: "와... 평소랑 느낌이 너무 달라서 못 알아볼 뻔"},
+            ] 
+        },
+        { 
+            img: "https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/3.png", 
+            likes: 115, liked: false,
+            caption: "생각이 많을 땐 그냥 멍때리는 게 답이다.", 
+            tags: "#옥상 #말보로 #아이스블라스트 #ISTP", 
+            comments: [
+                {user: "smoke_daily", text: "블라스트는 못 참지... 분위기 미쳤다"},
+                {user: "u_lucky", text: "야 너 또 옥상이냐? 술이나 마시러 와라"},
+                {user: "istp_commom", text: "ㄹㅇ 잇팁 특: 멍때리는 게 유일한 힐링임"},
+                {user: "o_o.zzZ", text: "언니 분위기 너무 독보적이에요..."},
+                {user: "siyeon", text: "@u_lucky 술 안 마셔. 내일 하체임."},
+                {user: "_vibes", text: "여기 어디인가요? 경치 좋네요"},
+                {user: "life_is_gym", text: "고민할 시간에 덤벨 하나 더 듭시다!"}
+            ] 
+        },
+        { 
+            img: "https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/4.png", 
+            likes: 95, liked: false,
+            caption: "갤러리 정리하다 나옴. 이때가 편하긴 했는데.", 
+            tags: "#숏컷 #과거사진", 
+            comments: [
+                {user: "u_lucky", text: "와 시연이 짧머 시절 진짜 오랜만이네 ㅋㅋㅋ 실화냐?"},
+                {user: "gym_junior", text: "대박... 선배님 이때는 진짜 미소년이셨네요 ㄷㄷ"},
+                {user: "siyeon", text: "@u_lucky 앨범 보다가 그냥 뜬 거야."},
+                {user: "__m.zzi", text: "이거 남동생 사진 아님? ㅋㅋ"},
+                {user: "siyeon", text: "@__m.zzi 내 사진 맞으니까 안과나 가라."},
+                {user: "sweet_home", text: "와... 지금도 예쁘지만 이때 분위기 진짜 미쳤네요!"},
+                {user: "o_o.zzZ", text: "언니 제발 다시 잘라주세요 제발요 ㅠㅠ"}
+            ] 
+        },
+        { 
+            img: "https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/5.png", 
+            likes: 230, liked: false,
+            caption: "영화는 모르겠고 팝콘 먹으러 옴. 어니언 반 달콤 반이 국룰.", 
+            tags: "#혼영아님 #팝콘", 
+            comments: [
+                {user: "o_o.zzZ", text: "언니 영화 보러 가서 팝콘만 드신 거 아니죠? ㅎㅎ"},
+                {user: "mood.lay", text: "와... 어두운 데서 봐도 시연님 미모가 팝콘보다 눈에 띄네요!"},
+                {user: "black_", text: "그래서 영화는 재밌었음?"},
+                {user: "siyeon", text: "@black_ 재밌음. 사실 중간에 10분 정도 졸았음."},
+                {user: "pppoppp__", text: "아 나도 팝콘 땡기네."},
+                {user: "u_lucky", text: "내 팝콘 그만 뺏어 먹어라. 손가락 물릴 뻔."},
+                {user: "siyeon", text: "@u_lucky 뭐래."}
+            ] 
+        },
+        { 
+            img: "https://raw.githubusercontent.com/deokc/siyeon/refs/heads/main/6.png", 
+            likes: 302, liked: false,
+            caption: "수혈 중. 카페인 없이는 사람 못 산다.", 
+            tags: "#아아 #카페인수혈 #생존전략", 
+            comments: [
+                {user: "coffee_holic", text: "역시 아아는 얼죽아죠! 시원해 보여요 ㅋㅋㅋ"},
+                {user: "u_lucky", text: "야 너 하루에 몇 잔을 마시는 거야 ㅋㅋ 심장 안 떨리냐?"},
+                {user: "siyeon", text: "@u_lucky 카페인 안 들어가면 내가 더 떨림."},
+                {user: "gym_rat_3", text: "오... 부스터 대신 아아 마시는 스타일이신가요?"},
+                {user: "all_sports", text: "시연아 적당히 마셔. 잠은 자야지."},
+                {user: "siyeon", text: "@all_sports 잠은 죽어서 잘 예정."},
+                {user: "mood.lay", text: "와 저도 자주 가는 카페인데! 여기 아아 산미 없어서 좋죠?"},
+                {user: "p_e_a_c_h_", text: "내 것도 한 잔 사와라. 도서관이다."},
+            ] 
+        }
+    ];
+
+    let isFollowing = false;
+    let currentPostIdx = null;
+
+    const grid = document.getElementById('main-grid');
+    function renderGrid() {
+        grid.innerHTML = '';
+        postsData.forEach((p, i) => {
+            const d = document.createElement('div');
+            d.className = 'post';
+            d.onclick = () => openPostModal(i);
+            d.innerHTML = `<img src="${p.img}" onerror="this.src='https://via.placeholder.com/300?text=Check+Link+${i+1}'"><div class="post-overlay">❤️ ${p.likes} 💬 ${p.comments.length}</div>`;
+            grid.appendChild(d);
+        });
+    }
+    renderGrid();
+
+    function toggleFollow() {
+        isFollowing = !isFollowing;
+        const btn = document.getElementById('main-follow-btn');
+        const count = document.getElementById('follower-count');
+        btn.innerText = isFollowing ? "팔로잉" : "팔로우";
+        btn.classList.toggle('following', isFollowing);
+        count.innerText = isFollowing ? "1249" : "1248";
+    }
+
+    function openPostModal(i) {
+        currentPostIdx = i;
+        const post = postsData[i];
+        document.getElementById('modal-img-area').innerHTML = `<img src="${post.img}" onerror="this.src='https://via.placeholder.com/600?text=Check+Link+${i+1}'">`;
+        document.getElementById('modal-likes-count').innerText = post.likes;
+        document.getElementById('modal-caption').innerHTML = `<b>siyeon</b> ${post.caption}<br><span style="color:#00376b; cursor:pointer">${post.tags}</span>`;
+        
+        const heart = document.getElementById('heart-icon');
+        heart.innerText = post.liked ? "❤️" : "🤍";
+        heart.style.color = post.liked ? "#ed4956" : "#262626";
+
+        renderComments();
+        document.getElementById('postModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function toggleLike() {
+        const post = postsData[currentPostIdx];
+        post.liked = !post.liked;
+        post.likes += post.liked ? 1 : -1;
+        
+        const heart = document.getElementById('heart-icon');
+        heart.innerText = post.liked ? "❤️" : "🤍";
+        heart.style.color = post.liked ? "#ed4956" : "#262626";
+        document.getElementById('modal-likes-count').innerText = post.likes;
+        renderGrid();
+    }
+
+    function renderComments() {
+        const list = document.getElementById('comment-list');
+        list.innerHTML = '';
+        postsData[currentPostIdx].comments.forEach(c => {
+            list.innerHTML += `<div class="comment-item"><span class="comment-user">${c.user}</span>${c.text}</div>`;
+        });
+    }
+
+    function checkCommentInput() {
+        const val = document.getElementById('comment-input').value;
+        document.getElementById('comment-submit').classList.toggle('active', val.trim().length > 0);
+    }
+
+    function addComment() {
+        const input = document.getElementById('comment-input');
+        if(!input.value.trim()) return;
+        postsData[currentPostIdx].comments.push({user: "U_user", text: input.value});
+        input.value = "";
+        renderComments();
+        renderGrid();
+        setTimeout(() => {
+            const body = document.getElementById('m-body-scroll');
+            body.scrollTop = body.scrollHeight;
+        }, 50);
+    }
+
+    function openMsgModal() { document.getElementById('msgModal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    
+    function sendMsg() {
+        const input = document.getElementById('msg-input');
+        const list = document.getElementById('msg-list');
+        if(!input.value.trim()) return;
+
+        const hint = document.getElementById('empty-hint');
+        if(hint) hint.remove();
+
+        list.innerHTML += `<div class="msg-bubble msg-sent">${input.value}</div>`;
+        const userText = input.value;
+        input.value = "";
+        list.scrollTop = list.scrollHeight;
+
+        setTimeout(() => {
+            let reply = "누구냐?";
+            if(userText.includes("나야") || userText.includes("안녕")) reply = "누군데 갑자기 메시지냐.";
+            if(userText.includes("레이드")) reply = "레이드? ...아, 너냐? 내 인스타는 어떻게 찾았어.";
+            if(userText.includes("형")) reply = "형? 사람 잘못 보셨어요.";
+            if(userText.includes("뭐해")) reply = "운동하고 멍때리는 중. 넌 뭐 하는데.";
+            
+            list.innerHTML += `<div class="msg-bubble msg-received">${reply}</div>`;
+            list.scrollTop = list.scrollHeight;
+        }, 1000);
+    }
+
+    function closeModal(id) { 
+        document.getElementById(id).style.display = 'none'; 
+        document.body.style.overflow = 'auto';
+    }
+    window.onclick = (e) => { if(e.target.classList.contains('modal')) closeModal(e.target.id); }
+</script>
+
+</body>
+</html>
